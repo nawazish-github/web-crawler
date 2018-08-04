@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -14,7 +13,8 @@ import (
 var urlReg = make(map[string][]string)
 
 func main() {
-	rawURL := os.Args[1]
+	//rawURL := os.Args[1]
+	rawURL := "https://twitter.com"
 	pURL, err := ParseURL(rawURL)
 	if err != nil {
 		log.Fatal("Parse failure")
@@ -40,8 +40,10 @@ func main() {
 					link := atr.Val
 					if isRelativeURL(link) {
 						link = constructAbsoluteURL(pURL, link)
+						updateURLRegistryWithLatestLink(rawURL, link)
+						continue
 					}
-					updateURLRegistryWithLatestLink(rawURL, link)
+					verifyAndUpdateURLRegistryWithLatestLink(link, rawURL, pURL.Host)
 				}
 			}
 		}
@@ -50,6 +52,7 @@ func main() {
 		}
 	}
 	hrefIterator(node)
+	log.Println(urlReg)
 }
 
 //ParseURL parses a raw URL
@@ -90,4 +93,16 @@ func updateURLRegistryWithLatestLink(rawURL, link string) {
 	list := urlReg[rawURL]
 	list = append(list, link)
 	urlReg[rawURL] = list
+}
+
+func verifyAndUpdateURLRegistryWithLatestLink(link, rawURL, host string) {
+	pURL, err := ParseURL(link)
+	if err != nil {
+		log.Fatal("Could not parse the link: ", err)
+		return
+	}
+	if !strings.Contains(pURL.Host, host) {
+		return
+	}
+	updateURLRegistryWithLatestLink(rawURL, link)
 }
