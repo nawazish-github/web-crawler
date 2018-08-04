@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"os"
 	"strings"
+
+	"golang.org/x/net/html"
 )
 
 var urlReg = make(map[string][]string)
@@ -25,6 +27,11 @@ func main() {
 		return
 	}
 	defer resp.Body.Close()
+	_, parseErr := html.Parse(resp.Body)
+	if parseErr != nil {
+		log.Fatal("html parse failure")
+		return
+	}
 }
 
 //ParseURL parses a raw URL
