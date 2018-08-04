@@ -15,7 +15,7 @@ var urlReg = make(map[string][]string)
 
 func main() {
 	rawURL := os.Args[1]
-	_, err := ParseURL(rawURL)
+	pURL, err := ParseURL(rawURL)
 	if err != nil {
 		log.Fatal("Parse failure")
 		return
@@ -27,11 +27,29 @@ func main() {
 		return
 	}
 	defer resp.Body.Close()
-	_, parseErr := html.Parse(resp.Body)
+	node, parseErr := html.Parse(resp.Body)
 	if parseErr != nil {
 		log.Fatal("html parse failure")
 		return
 	}
+	var hrefIterator func(*html.Node)
+	hrefIterator = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "a" {
+			for _, atr := range n.Attr {
+				if atr.Key == "href" {
+					link := atr.Val
+					if isRelativeURL(link) {
+						link = constructAbsoluteURL(pURL, link)
+					}
+					updateURLRegistryWithLatestLink(rawURL, link)
+				}
+			}
+		}
+		for elem := n.FirstChild; elem != nil; elem = elem.NextSibling {
+			hrefIterator(elem)
+		}
+	}
+	hrefIterator(node)
 }
 
 //ParseURL parses a raw URL
@@ -55,4 +73,21 @@ func requestTheURL(rawURL string) (*http.Response, error) {
 		return nil, errors.New(errMsg + resp.Header.Get("Content-Type"))
 	}
 	return resp, err
+}
+
+func isRelativeURL(link string) bool {
+	if strings.HasPrefix(link, "/") {
+		return true
+	}
+	return false
+}
+
+func constructAbsoluteURL(pURL *url.URL, link string) string {
+	return pURL.Scheme + "://" + pURL.Host + link
+}
+
+func updateURLRegistryWithLatestLink(rawURL, link string) {
+	list := urlReg[rawURL]
+	list = append(list, link)
+	urlReg[rawURL] = list
 }
