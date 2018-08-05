@@ -4,61 +4,49 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"net/url"
+	"os"
 	"strings"
 
-	"golang.org/x/net/html"
+	"github.com/nawazish-github/web-crawler/hrefhandler"
+
+	"github.com/nawazish-github/web-crawler/parsers"
 )
 
-var urlReg = make(map[string][]string)
+const depth = 1
+
+var (
+	isFirstItr = true
+	urlReg     = make(map[string][]string)
+)
 
 func main() {
-	//rawURL := os.Args[1]
-	rawURL := "https://twitter.com"
-	pURL, err := ParseURL(rawURL)
-	if err != nil {
-		log.Fatal("Parse failure")
-		return
-	}
-	addURLToURLRegistry(rawURL)
-	resp, err := requestTheURL(rawURL)
-	if err != nil {
-		log.Fatal("Request Failure: ", err)
-		return
-	}
-	defer resp.Body.Close()
-	node, parseErr := html.Parse(resp.Body)
-	if parseErr != nil {
-		log.Fatal("html parse failure: ", parseErr)
-		return
-	}
-	var hrefIterator func(*html.Node)
-	hrefIterator = func(n *html.Node) {
-		if n.Type == html.ElementNode && n.Data == "a" {
-			for _, atr := range n.Attr {
-				if atr.Key == "href" {
-					link := atr.Val
-					if isRelativeURL(link) {
-						link = constructAbsoluteURL(pURL, link)
-						updateURLRegistryWithLatestLink(rawURL, link)
-						continue
-					}
-					verifyAndUpdateURLRegistryWithLatestLink(link, rawURL, pURL.Host)
-				}
-			}
+	rawURL := os.Args[1]
+	for i := 0; i < depth; i++ {
+		//allow first iteration to execute without any checks.
+		if !isFirstItr && len(urlReg[rawURL]) == 0 {
+			break
 		}
-		for elem := n.FirstChild; elem != nil; elem = elem.NextSibling {
-			hrefIterator(elem)
+		pURL, urlParseErr := parsers.ParseURL(rawURL)
+		if urlParseErr != nil {
+			log.Fatal("URL Parse Error: ", urlParseErr)
+			continue
 		}
+		isFirstItr = false
+		addURLToURLRegistry(rawURL)
+		resp, err := requestTheURL(rawURL)
+		if err != nil {
+			log.Fatal("Request Failure: ", err)
+			continue
+		}
+		defer resp.Body.Close()
+		rootElem, htmlParseErr := parsers.ParseHTMLDoc(resp.Body)
+		if htmlParseErr != nil {
+			log.Fatal("Request Failure: ", err)
+			continue
+		}
+		hrefhandler.Handle(rootElem, pURL, rawURL)
 	}
-	hrefIterator(node)
-	log.Println(urlReg)
-}
-
-//ParseURL parses a raw URL
-func ParseURL(rawURL string) (*url.URL, error) {
-	pURL, err := url.Parse(rawURL)
-	return pURL, err
+	log.Println(hrefhandler.GetURLReg())
 }
 
 //addURLToURLRegistry maintains a registry of crawled URLs
@@ -76,36 +64,4 @@ func requestTheURL(rawURL string) (*http.Response, error) {
 		return nil, errors.New(errMsg + resp.Header.Get("Content-Type"))
 	}
 	return resp, err
-}
-
-func isRelativeURL(link string) bool {
-	if strings.HasPrefix(link, "/") {
-		return true
-	}
-	return false
-}
-
-func constructAbsoluteURL(pURL *url.URL, link string) string {
-	return pURL.Scheme + "://" + pURL.Host + link
-}
-
-func updateURLRegistryWithLatestLink(rawURL, link string) {
-	list := urlReg[rawURL]
-	list = append(list, link)
-	urlReg[rawURL] = list
-}
-
-//verifyAndUpdateURLRegistryWithLatestLink checks if the link under
-//consideration is from the same base domain; it discards any
-//external links.
-func verifyAndUpdateURLRegistryWithLatestLink(link, rawURL, host string) {
-	pURL, err := ParseURL(link)
-	if err != nil {
-		log.Fatal("Could not parse the link: ", err)
-		return
-	}
-	if !strings.Contains(pURL.Host, host) {
-		return
-	}
-	updateURLRegistryWithLatestLink(rawURL, link)
 }
