@@ -77,14 +77,16 @@ func verifyAndUpdateURLRegistryWithLatestLink(link, rawURL, host string, gen *mo
 }
 
 var siteMap []model.Generation
-var depth = 1
+
+//Depth defines the level of crawl in the URL tree.
+var Depth = 1
 var counter = 0
 
 //MultiCrawler crawls a list of URLs and returns a list of
 //generations.
 func MultiCrawler(rawURLs []string) []model.Generation {
 	counter++
-	if counter > depth {
+	if counter > Depth {
 		return nil
 	}
 	gen := model.NewGeneration()
