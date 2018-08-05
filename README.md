@@ -1,6 +1,11 @@
 # web-crawler
 A web crawler that crawls for all referrals in the same domain.
 
-##Usage
+## Usage
 Run the binary passing it the URL which needs to be crawled: 
-./main https://twitter.com
+1. ./main https://twitter.com
+
+Or run the main file passing the URL:
+
+2. go run web-crawler.go https://twitter.com
+
