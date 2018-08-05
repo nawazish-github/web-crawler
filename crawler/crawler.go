@@ -59,13 +59,6 @@ func updateURLRegistryWithLatestLink(rawURL, link string, gen *model.Generation)
 	list := gen.GenMap[rawURL]
 	list = append(list, link)
 	gen.GenMap[rawURL] = list
-	// list := model.GetURLReg()[rawURL]
-	// list = append(list, link)
-	// model.GetURLReg()[rawURL] = list
-
-	// list := urlReg[rawURL]
-	// list = append(list, link)
-	// urlReg[rawURL] = list
 }
 
 //verifyAndUpdateURLRegistryWithLatestLink checks if the link under
