@@ -29,7 +29,7 @@ func main() {
 	defer resp.Body.Close()
 	node, parseErr := html.Parse(resp.Body)
 	if parseErr != nil {
-		log.Fatal("html parse failure")
+		log.Fatal("html parse failure: ", parseErr)
 		return
 	}
 	var hrefIterator func(*html.Node)
@@ -95,6 +95,9 @@ func updateURLRegistryWithLatestLink(rawURL, link string) {
 	urlReg[rawURL] = list
 }
 
+//verifyAndUpdateURLRegistryWithLatestLink checks if the link under
+//consideration is from the same base domain; it discards any
+//external links.
 func verifyAndUpdateURLRegistryWithLatestLink(link, rawURL, host string) {
 	pURL, err := ParseURL(link)
 	if err != nil {
