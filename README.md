@@ -7,7 +7,7 @@ Run the binary passing it the URL which needs to be crawled and the depth of ite
 
 Or run the main file passing the URL:
 
-2. go run web-crawler.go https://twitter.com 1
+2. go run main/web-crawler.go https://twitter.com 1
 
 ## Current Implementation Limitations
 
