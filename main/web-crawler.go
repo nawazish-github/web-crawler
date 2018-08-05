@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/nawazish-github/web-crawler/model"
+
 	"github.com/nawazish-github/web-crawler/hrefhandler"
 
 	"github.com/nawazish-github/web-crawler/parsers"
@@ -32,7 +34,8 @@ func main() {
 			continue
 		}
 		isFirstItr = false
-		addURLToURLRegistry(rawURL)
+		model.AddURLToURLRegistry(rawURL)
+		//addURLToURLRegistry(rawURL)
 		resp, err := requestTheURL(rawURL)
 		if err != nil {
 			log.Fatal("Request Failure: ", err)
@@ -46,14 +49,7 @@ func main() {
 		}
 		hrefhandler.Handle(rootElem, pURL, rawURL)
 	}
-	log.Println(hrefhandler.GetURLReg())
-}
-
-//addURLToURLRegistry maintains a registry of crawled URLs
-func addURLToURLRegistry(rawURL string) {
-	if _, ok := urlReg[rawURL]; !ok {
-		urlReg[rawURL] = []string{}
-	}
+	log.Println(model.GetURLReg())
 }
 
 func requestTheURL(rawURL string) (*http.Response, error) {
