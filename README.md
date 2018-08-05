@@ -9,3 +9,8 @@ Or run the main file passing the URL:
 
 2. go run web-crawler.go https://twitter.com
 
+## Current Implementation Limitations
+
+1. Single threaded
+2. Duplicate calls 
+3. Untested
