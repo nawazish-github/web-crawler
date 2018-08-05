@@ -1,11 +1,10 @@
 package main
 
 import (
-	"errors"
 	"log"
-	"net/http"
 	"os"
-	"strings"
+
+	"github.com/nawazish-github/web-crawler/httphelper"
 
 	"github.com/nawazish-github/web-crawler/model"
 
@@ -35,8 +34,7 @@ func main() {
 		}
 		isFirstItr = false
 		model.AddURLToURLRegistry(rawURL)
-		//addURLToURLRegistry(rawURL)
-		resp, err := requestTheURL(rawURL)
+		resp, err := httphelper.RequestTheURL(rawURL)
 		if err != nil {
 			log.Fatal("Request Failure: ", err)
 			continue
@@ -50,14 +48,4 @@ func main() {
 		hrefhandler.Handle(rootElem, pURL, rawURL)
 	}
 	log.Println(model.GetURLReg())
-}
-
-func requestTheURL(rawURL string) (*http.Response, error) {
-	resp, err := http.Get(rawURL)
-	contentType := resp.Header.Get("Content-Type")
-	if !strings.HasPrefix(contentType, "text/html") {
-		errMsg := "Incompatible Mime Type. Expecting text/html got "
-		return nil, errors.New(errMsg + resp.Header.Get("Content-Type"))
-	}
-	return resp, err
 }
