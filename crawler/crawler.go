@@ -98,13 +98,13 @@ func MultiCrawler(rawURLs []string) []model.Generation {
 		}
 		//gen := model.NewGeneration()
 		gen.GenMap[rawURL] = []string{}
-		resp, err := httphelper.RequestTheURL(rawURL)
+		httpReq := httphelper.HTTPGetRequester{URL: rawURL}
+		resp, err := httpReq.Request()
 		if err != nil {
 			log.Fatal("Request Failure: ", err)
 			continue
 		}
-		defer resp.Body.Close()
-		rootElem, htmlParseErr := parsers.ParseHTMLDoc(resp.Body)
+		rootElem, htmlParseErr := parsers.ParseHTMLDoc(resp)
 		if htmlParseErr != nil {
 			log.Fatal("Request Failure: ", err)
 			continue

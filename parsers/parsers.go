@@ -1,7 +1,7 @@
 package parsers
 
 import (
-	"io"
+	"bytes"
 	"net/url"
 
 	"golang.org/x/net/html"
@@ -15,6 +15,7 @@ func ParseURL(rawURL string) (*url.URL, error) {
 
 //ParseHTMLDoc parses given argument into a valid
 //HTML doc returning its root element, Node or error
-func ParseHTMLDoc(doc io.Reader) (*html.Node, error) {
+func ParseHTMLDoc(data []byte) (*html.Node, error) {
+	doc := bytes.NewReader(data)
 	return html.Parse(doc)
 }
